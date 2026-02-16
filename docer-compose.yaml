@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # 1. データベース (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: taku-off-db
+    restart: always
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d # 初期化SQL
+      - postgres_data:/var/lib/postgresql/data # データ永続化
+
+  # 2. 認証サービス
+  backend-auth:
+    build: ./backend-auth
+    container_name: taku-off-auth
+    env_file: .env
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./shared_storage:/app/shared_storage # 共通倉庫をマウント
+    depends_on:
+      - db
+
+  # 3. 動画管理サービス
+  backend-video:
+    build: ./backend-video
+    container_name: taku-off-video
+    env_file: .env
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./shared_storage:/app/shared_storage # 共通倉庫をマウント
+    depends_on:
+      - db
+
+  # 4. 動画加工ワーカー (FFmpeg)
+  worker-video:
+    build: ./worker-video
+    container_name: taku-off-worker
+    env_file: .env
+    volumes:
+      - ./shared_storage:/app/shared_storage # 共通倉庫をマウント
+    depends_on:
+      - db
+
+  # 5. フロントエンド
+  frontend-main:
+    build: ./frontend-main
+    container_name: taku-off-frontend
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend-auth
+      - backend-video
+
+volumes:
+  postgres_data: # DBのデータをPC内に保持するための設定
