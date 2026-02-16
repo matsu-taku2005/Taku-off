@@ -1,0 +1,12 @@
+body {
+    margin: 0;
+    background-color: #0f0f0f; /* YouTubeのようなダークモード */
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
