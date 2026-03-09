@@ -10,4 +10,5 @@ export function Home() {
             </div>
         </main>
     `;
+    return container;
 }
